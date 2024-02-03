@@ -63,7 +63,7 @@ class TelemPipeline(StandardPipeline):
         for channel in self.telem_hist:
 
             full_channel_name = channel.template.get_full_name().replace(".", "_")
-            channel_structure = self.topologyToJson.dictionary_of_channel[full_channel_name]
+            channel_structure = self.topologyToJson.dictionary_of_channel[full_channel_name]         
             data = channel.get_val()
             for single_telemetry in channel_structure:
                 keys = single_telemetry.get("keys", [])
@@ -73,6 +73,10 @@ class TelemPipeline(StandardPipeline):
                 self.json_writeable = True
 
                 hist_name = full_channel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
+                # if(self.topologyToJson.LIMIT_COMPLEXITY<=len(channel_structure)):
+                #     hist_name = full_channel_name
+                # else:
+                #     hist_name = full_channel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
                 hist_data = {
                             'name': hist_name, 
                             'data': {
@@ -97,7 +101,7 @@ class TelemPipeline(StandardPipeline):
             outfile.write(self.telem_init_json)
 
     def post_telem(self, uri="http://127.0.0.1:4052/fprime_telem"):
-        requests.post(uri, json={'name': 'heli', 'telem': self.telem_data}) 
+        requests.post(uri, json={'name': 'full_topology', 'telem': self.telem_data}) 
 
 def signal_handler(*_):
     print("Ctrl-C received, server shutting down.")

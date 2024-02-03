@@ -38,14 +38,14 @@ class TopologyAppDictionaryJSONifier():
         project_dictionary = Dictionaries()
         project_dictionary.load_dictionaries(xml_path, packet_spec=None)
         
-        self.__dictionary_of_channel = {}
+        self.dictionary_of_channel = {}
 
         for _, value in project_dictionary.channel_id.items():
             channel_name = value.get_full_name().replace(".", "_")
 
             keys_to_access_values_and_type = []
             self.create_access_list(value.get_type_obj(), keys_to_access_values_and_type)
-            self.__dictionary_of_channel[channel_name] = keys_to_access_values_and_type
+            self.dictionary_of_channel[channel_name] = keys_to_access_values_and_type
 
         self.__measurement_list = []
         self.__init_states = {}
@@ -61,7 +61,7 @@ class TopologyAppDictionaryJSONifier():
     # Load Telemetry Channel List and format it to be in the OpenMCT Dictionary Format
     def loadEntries(self):
 
-        for chanel_name, channel_data in self.__dictionary_of_channel.items():
+        for chanel_name, channel_data in self.dictionary_of_channel.items():
             
             for channel_member in channel_data:
                 measurement_entry = {}
