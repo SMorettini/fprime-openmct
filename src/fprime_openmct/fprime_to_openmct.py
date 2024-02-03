@@ -38,6 +38,7 @@ class TopologyAppDictionaryJSONifier():
         project_dictionary = Dictionaries()
         project_dictionary.load_dictionaries(xml_path, packet_spec=None)
         
+        self.LIMIT_COMPLEXITY=3
         self.dictionary_of_channel = {}
 
         for _, value in project_dictionary.channel_id.items():
@@ -63,39 +64,62 @@ class TopologyAppDictionaryJSONifier():
 
         for chanel_name, channel_data in self.dictionary_of_channel.items():
             
-            for channel_member in channel_data:
-                measurement_entry = {}
-                measurement_entry['values'] = [{}, {}]
+            time_entry={
+                    'key': 'utc',
+                    'source': 'timestamp',
+                    'name': 'Timestamp',
+                    'format': 'utc',
+                    'hints': {
+                        'domain': 1
+                    }
+                }
+
+            for index, channel_member in enumerate(channel_data):
+
                 keys = channel_member.get("keys", [])
+                # The measurement_entry should be initalize if it's the first member of the channel
+                # or if the channel have too many member and so a measurement is built for each 
+                # member
+                if(len(channel_data)>self.LIMIT_COMPLEXITY or index==0):
+                    # Initialize the measurement_entry
+                    measurement_entry = {
+                        'values': [time_entry],
+                    }
 
-                measurement_entry['name'] = chanel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
-                measurement_entry['key'] = chanel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
+                    if(len(channel_data)<=self.LIMIT_COMPLEXITY):
+                        name_measurement=chanel_name
+                    else:
+                        name_measurement=chanel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
 
-                measurement_entry['values'][0]['key'] = "value" #channel_obj.id
-                measurement_entry['values'][0]['name'] = "Value" #channel_obj.name
-                measurement_entry['values'][0]['hints'] = {}
-                measurement_entry['values'][0]['hints']['range'] = 1
+                    measurement_entry['name'] = name_measurement
+                    measurement_entry['key'] = name_measurement
+                if(len(channel_data)<=self.LIMIT_COMPLEXITY):
+                    member_name = (('_'.join(map(str, keys))) if len(keys)>0 else "Value")
+                else:
+                    member_name="Value"
 
-                measurement_entry['values'][1]['key'] = 'utc'
-                measurement_entry['values'][1]['source'] = 'timestamp'
-                measurement_entry['values'][1]['name'] = 'Timestamp'
-                measurement_entry['values'][1]['format'] = 'utc'
-                measurement_entry['values'][1]['hints'] = {}
-                measurement_entry['values'][1]['hints']['domain'] = 1
+                type_member_channel = channel_member.get("type", [])
+                measurement_entry['values'].append({
+                    'key': member_name,
+                    'name': member_name,
+                    'format': type_member_channel,
+                    'hints': {
+                        'range': 1
+                    }
+                })
 
-                type_i = channel_member.get("type", [])
-                measurement_entry['values'][0]['format'] = type_i
-
-                if(type_i == "float"):
+                if(type_member_channel == "float"):
                     self.__init_states[measurement_entry['key']] = 0.0
-                elif(type_i == "integer"):
-                    measurement_entry['values'][0]['format'] = 'integer'
+                elif(type_member_channel == "integer"):
                     self.__init_states[measurement_entry['key']] = 0 
-                elif(type_i == 'enum'):
-                    measurement_entry['values'][0]['enumerations'] = [{'string': key, 'value': value} for key, value in channel_member.get("enum", {}).items()]
+                elif(type_member_channel == 'enum'):
+                    measurement_entry['values'][-1]['enumerations'] = [{'string': key, 'value': value} for key, value in channel_member.get("enum", {}).items()]
                     self.__init_states[measurement_entry['key']] = list(channel_member.get("enum", {}).keys())[0]
 
-                self.__measurement_list.append(measurement_entry)   
+                # Add to the list if one measurement is created for each member or if it's the last 
+                # member of the channel
+                if(len(channel_data)>self.LIMIT_COMPLEXITY or index==(len(channel_data)-1)):
+                    self.__measurement_list.append(measurement_entry)   
 
         self.__init_states = {**self.__init_states}
 

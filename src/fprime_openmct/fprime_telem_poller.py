@@ -63,33 +63,39 @@ class TelemPipeline(StandardPipeline):
         for channel in self.telem_hist:
 
             full_channel_name = channel.template.get_full_name().replace(".", "_")
-            channel_structure = self.topologyToJson.dictionary_of_channel[full_channel_name]         
+            channel_data = self.topologyToJson.dictionary_of_channel[full_channel_name]         
             data = channel.get_val()
-            for single_telemetry in channel_structure:
-                keys = single_telemetry.get("keys", [])
+            for index, channel_member in enumerate(channel_data):
+                keys = channel_member.get("keys", [])
+
+                if(len(channel_data)>self.topologyToJson.LIMIT_COMPLEXITY or index==0):
+                    if(len(channel_data)<=self.topologyToJson.LIMIT_COMPLEXITY):
+                        hist_name = full_channel_name
+                    else:
+                        hist_name = full_channel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
+                    hist_data = {
+                        'name': hist_name,
+                        'time':channel.time.to_readable(),
+                        'data':[]
+                    }
+
+                if(len(channel_data)<=self.topologyToJson.LIMIT_COMPLEXITY):
+                    member_name = (('_'.join(map(str, keys))) if len(keys)>0 else "Value")
+                else:
+                    member_name="Value"
+
                 value = data
                 for key in keys:
                     value = value[key]
-                self.json_writeable = True
-
-                hist_name = full_channel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
-                # if(self.topologyToJson.LIMIT_COMPLEXITY<=len(channel_structure)):
-                #     hist_name = full_channel_name
-                # else:
-                #     hist_name = full_channel_name+(('_'+'_'.join(map(str, keys))) if len(keys)>0 else "")
-                hist_data = {
-                            'name': hist_name, 
-                            'data': {
-                                    'id':hist_name,
-                                    'val':value,
-                                    'time':channel.time.to_readable()
-                                    }
-                            }
                 
-                self.telem_data.append(hist_data)
+                hist_data["data"].append({
+                        'member_name': member_name,
+                        'val':value
+                })
 
-                if self.json_writeable:
-                    self.telem_init_states[hist_name] = value
+                if(len(channel_data)>self.topologyToJson.LIMIT_COMPLEXITY or index==(len(channel_data)-1)):
+                    self.telem_data.append(hist_data)
+
 
 
 

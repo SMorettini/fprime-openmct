@@ -79,3 +79,10 @@ This fork is currently available at https://github.com/mohitsingh999/fprime-gds 
 
 
 
+Future work:
+
+* Grouping channel by component
+* Channel that have more member than LIMIT, should be grouped by channel
+* Limit configurable
+* History is broken. Create empty initial id or find alternative
+* It doens't open 22 times in a row

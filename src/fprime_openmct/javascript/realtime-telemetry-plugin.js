@@ -15,7 +15,7 @@ function RealtimeTelemetryPlugin() {
         
         var provider = {
             supportsSubscribe: function (domainObject) {
-                return domainObject.type === 'example.telemetry';
+                return domainObject.type === 'general.telemetry';
             },
             subscribe: function (domainObject, callback) {
                 listener[domainObject.identifier.key] = callback;
@@ -27,7 +27,7 @@ function RealtimeTelemetryPlugin() {
             },
 
             supportsRequest: function (domainObject) {
-                return domainObject.type === 'example.telemetry';
+                return domainObject.type === 'general.telemetry';
             },
             request: function (domainObject, options) {
                 var url = '/history/' +

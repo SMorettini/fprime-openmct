@@ -8,10 +8,13 @@ function HistoryServer(telemetry) {
         var end = +req.query.end;
         var ids = req.params.pointId.split(',');
 
+        // #Problem if history is empty since there is not anymore the default value
         var response = ids.reduce(function (resp, id) {
-            return resp.concat(telemetry.history[id].filter(function (p) {
+            var historyData = telemetry.history[id]?.filter(function (p) {
                 return p.timestamp > start && p.timestamp < end;
-            }));
+            }) || [];
+            // Concatenate the filtered data to the response
+            return resp.concat(historyData);
         }, []);
         res.status(200).json(response).end();
     });

@@ -1,0 +1,29 @@
+{
+    "name": "RefTopologyAppDictionary",
+    "key": "/workspaces/fprime-with-devcontainer/fprime/Ref/build-artifacts/Linux/Ref/dict/RefTopologyAppDictionary",
+    "measurements": [
+        {
+            "values": [
+                {
+                    "key": "value",
+                    "name": "Value",
+                    "hints": {
+                        "range": 1
+                    },
+                    "format": "integer"
+                },
+                {
+                    "key": "utc",
+                    "source": "timestamp",
+                    "name": "Timestamp",
+                    "format": "utc",
+                    "hints": {
+                        "domain": 1
+                    }
+                }
+            ],
+            "name": "blockDrv_BD_Cycles",
+            "key": "blockDrv_BD_Cycles"
+        }
+    ]
+}

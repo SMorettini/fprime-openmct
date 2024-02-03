@@ -22,7 +22,7 @@ var objectProvider = {
                 return {
                     identifier: identifier,
                     name: measurement.name,
-                    type: 'example.telemetry',
+                    type: 'general.telemetry',
                     telemetry: {
                         values: measurement.values
                     },

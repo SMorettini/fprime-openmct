@@ -8,7 +8,7 @@ var app = express();
 var fs = require('fs');
 
 //Get Initial Telemetry States from data.json
-var state = JSON.parse(fs.readFileSync('initial_states.json', 'utf8'));
+var state = {}//JSON.parse(fs.readFileSync('initial_states.json', 'utf8'));
 //console.log(state);
 
 
@@ -35,7 +35,7 @@ function FPrimeTelemListener() {
 
     setInterval(function () {
         this.updateState();
-        this.generateTelemetry();
+        // this.generateTelemetry();
     }.bind(this), 1000);
 
 };
@@ -55,15 +55,23 @@ FPrimeTelemListener.prototype.updateState = function () {
             try {
                 //Check that the state key matches the recieved name
                 const name = req.body.telem[i].name;
-                //console.log(name);
-                for (const [ key, value ] of Object.entries(this.state)) {
-                        if (key == name) {
-                            //console.log("processing");
-                            //Assign State entries to the recieved data values 
-                            this.state[key] = req.body.telem[i].data.val;
-                            //console.log(this.state[key]);
-                        }
-                }     
+
+                //Assign State entries to the recieved data values 
+                this.state[name] = req.body.telem[i].data.val;
+                
+                var state_channel = { timestamp: req.body.telem[i].time, id: name};
+                
+                req.body.telem[i].data.forEach(function (member) {
+                    state_channel[member.member_name]=member.val
+                });
+                
+                this.notify(state_channel);
+                if (!this.history.hasOwnProperty(name)) {
+                    this.history[name]=[];
+                }
+                this.history[name].push(state_channel);
+                this.state["comms.sent"] += JSON.stringify(state).length;
+
             } catch (error) {
                 console.log(error);
             }
@@ -77,17 +85,18 @@ FPrimeTelemListener.prototype.updateState = function () {
 };
 
 /**
- *  Sets up communication between State Object and OpenMCT Telemetry 
- */
-FPrimeTelemListener.prototype.generateTelemetry = function () {
-    var timestamp = Date.now(), sent = 0;
-    Object.keys(this.state).forEach(function (id) {
-        var state = { timestamp: timestamp, value: this.state[id], id: id};
-        this.notify(state);
-        this.history[id].push(state);
-        this.state["comms.sent"] += JSON.stringify(state).length;
-    }, this);
-};
+*  Sets up communication between State Object and OpenMCT Telemetry 
+* To use only fo testing
+*/
+// FPrimeTelemListener.prototype.generateTelemetry = function () {
+// var timestamp = Date.now(), sent = 0;
+// Object.keys(this.state).forEach(function (id) {
+// var state = { timestamp: timestamp, value: this.state[id], id: id};
+//         this.notify(state);
+//         this.history[id].push(state);
+//         this.state["comms.sent"] += JSON.stringify(state).length;
+//     }, this);
+// };
 
 FPrimeTelemListener.prototype.notify = function (point) {
     this.listeners.forEach(function (l) {
